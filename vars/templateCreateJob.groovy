@@ -101,7 +101,7 @@ def call(body) {
                 }
                 steps {
                     script {
-                        gitLib.cloneRepoWithBranch("${params.gitRemote}", "${branch}", "${template}")
+                        gitLib.cloneRepoWithBranch("${branch}", "${template}")
                         sh "echo ${params.serviceName}"
                         sh "rm -rf ${params.serviceName}"
                         sh "./${template}/prepare.sh ${params.serviceName}"

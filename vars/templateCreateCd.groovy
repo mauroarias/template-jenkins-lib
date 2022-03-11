@@ -122,7 +122,7 @@ def call(body) {
             //     }
             //     steps {
             //         script {
-            //             gitLib.cloneRepo("${gitRemote}", "${serviceName}")
+            //             gitLib.cloneRepo("${serviceName}")
             //             dir("${serviceName}") {
             //                 def tools = new org.mauro.Tools() 
             //                 typeLib = "${tools.getCdType()}"
