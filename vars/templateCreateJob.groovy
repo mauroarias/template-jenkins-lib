@@ -15,7 +15,7 @@ def call(body) {
             stage('Initialize') {
                 steps {
                     script { 
-                        def libLoader = new org.mauro.LibLoader()
+                        // def libLoader = new org.mauro.LibLoader()
                         libLoader.loadLib()
                         agentImage = templateLib.getDefaultAgent()
 
@@ -24,10 +24,13 @@ def call(body) {
                             choice(choices: templateLib.getTemplates(), name: 'template', description: 'template type'),
                             choice(choices: ['gitHub', 'bitBucket'], name: 'gitDstRemote', description: 'git destination remote'),
                             string(defaultValue: '', name: 'serviceName', trim: true, description: 'project name')]
+                        def templateName = templateInfo.template
+                        def gitDstRemote = templateInfo.gitDstRemote
+                        def serviceName = templateInfo.serviceName
 
-                        sh "echo 'template: ${templateInfo.template}'"
-                        sh "echo 'git remote: ${templateInfo.gitDstRemote}'"
-                        sh "echo 'service name: ${templateInfo.serviceName}'"
+                        sh "echo 'template: ${templateName}'"
+                        sh "echo 'git remote: ${gitDstRemote}'"
+                        sh "echo 'service name: ${serviceName}'"
                         sh "echo 'manual trigger: ${params.manualTrigger}'"
                     }
                 }
@@ -41,7 +44,7 @@ def call(body) {
                 steps {
                     timeout(time: 3, unit: 'MINUTES') {
                         script { 
-                            if ("${templateInfo.serviceName}" == '') {   
+                            if ("${serviceName}" == '') {   
                                 error('service name must be defined...!')
                             }
                             jenkinsLib.downloadJenkinsCli()
@@ -72,9 +75,9 @@ def call(body) {
                 }
                 steps {
                     script {
-                        gitLib.validateEnvVars("${templateInfo.gitDstRemote}")
-                        gitLib.createProjectIfNotExitsIfAppl("${templateInfo.gitDstRemote}", "${projectName}")
-                        if (gitLib.isRepositoryExits("${templateInfo.gitDstRemote}", "${templateInfo.serviceName}")) {
+                        gitLib.validateEnvVars("${gitDstRemote}")
+                        gitLib.createProjectIfNotExitsIfAppl("${gitDstRemote}", "${projectName}")
+                        if (gitLib.isRepositoryExits("${gitDstRemote}", "${serviceName}")) {
                             error('repository already exits...!')
                         }
                     }
@@ -88,9 +91,9 @@ def call(body) {
                 }
                 steps {
                     script {
-                        branch = templateLib.getBranch("${templateInfo.template}")
-                        template =  templateLib.getTemplateType("${templateInfo.template}")
-                        agentImage =  templateLib.getAgentByTemplate("${templateInfo.template}")
+                        branch = templateLib.getBranch("${templateName}")
+                        template =  templateLib.getTemplateType("${templateName}")
+                        agentImage =  templateLib.getAgentByTemplate("${templateName}")
                     }
                 }
             }
@@ -106,12 +109,12 @@ def call(body) {
                 steps {
                     script {
                         gitLib.cloneRepoWithBranch("${branch}", "${template}")
-                        sh "echo ${templateInfo.serviceName}"
-                        sh "rm -rf ${templateInfo.serviceName}"
-                        sh "./${template}/prepare.sh ${templateInfo.serviceName}"
-                        sh "mv ${template} ${templateInfo.serviceName}"
-                        sh "rm ${templateInfo.serviceName}/prepare.sh"
-                        jenkinsLib.stash('template', "${templateInfo.serviceName}/**/*", "${templateInfo.serviceName}/.git", false)
+                        sh "echo ${serviceName}"
+                        sh "rm -rf ${serviceName}"
+                        sh "./${template}/prepare.sh ${serviceName}"
+                        sh "mv ${template} ${serviceName}"
+                        sh "rm ${serviceName}/prepare.sh"
+                        jenkinsLib.stash('template', "${serviceName}/**/*", "${serviceName}/.git", false)
                     }
                 }
             }
@@ -124,10 +127,10 @@ def call(body) {
                 steps {
                     script { 
                         unstash 'template'
-                        dir("${templateInfo.serviceName}") {
-                            gitLib.createRepo("${templateInfo.gitDstRemote}", "${templateInfo.serviceName}", "${projectName}")
+                        dir("${serviceName}") {
+                            gitLib.createRepo("${gitDstRemote}", "${serviceName}", "${projectName}")
                             jenkinsLib.createJenkinsPipelineFileWithLib("${templateLib.getCiPipeline()}", "${templateLib.getCiVersion()}")
-                            gitLib.initRepo("${templateInfo.gitDstRemote}", "${GIT_EMAIL}", "${GIT_USER}", "${templateInfo.serviceName}", 'origin')
+                            gitLib.initRepo("${gitDstRemote}", "${GIT_EMAIL}", "${GIT_USER}", "${serviceName}", 'origin')
                             gitLib.commitAndPushRepo('origin', 'develop', 'first draft')
                         }
                     }
@@ -141,9 +144,9 @@ def call(body) {
                 }
                 steps {
                     script {
-                        build job: 'create-ci-cd-jobs', wait: true, parameters: [string(name: 'gitDstRemote', value: String.valueOf("${templateInfo.gitDstRemote}")),
+                        build job: 'create-ci-cd-jobs', wait: true, parameters: [string(name: 'gitDstRemote', value: String.valueOf("${gitDstRemote}")),
                                                                                         string(name: 'projectName', value: String.valueOf("${projectName}")),
-                                                                                        string(name: 'serviceName', value: String.valueOf("${templateInfo.serviceName}"))]
+                                                                                        string(name: 'serviceName', value: String.valueOf("${tserviceName}"))]
                     }
                 }
             }
@@ -156,4 +159,13 @@ def call(body) {
             }
         }
     }
+}
+
+def loadLib () {
+    def libVersion = 'wip-0.1.0'
+    sh "echo 'loading lib version: ${libVersion}'"
+    library identifier: "jenkins-share-lib@${libVersion}", retriever: 
+        modernSCM(
+            [$class: 'GitSCMSource',
+            remote: 'https://github.com/mauroarias/jenkins-share-lib.git'])
 }

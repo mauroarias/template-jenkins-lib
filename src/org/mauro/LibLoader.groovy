@@ -7,6 +7,7 @@ def loadLib () {
         modernSCM(
             [$class: 'GitSCMSource',
             remote: 'https://github.com/mauroarias/jenkins-share-lib.git'])
+    jenkinsLib.prepareLib()
 }
 
 return this
