@@ -15,7 +15,8 @@ def call(body) {
             stage('Initialize') {
                 steps {
                     script { 
-                        org.mauro.LibLoader.loadLib()
+                        def libLoader = new org.mauro.LibLoader()
+                        libLoader.loadLib()
                         agentImage = templateLib.getDefaultAgent()
 
                         templateInfo = input message: 'choose temlate', ok: 'Next',
