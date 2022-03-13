@@ -15,7 +15,7 @@ def call(body) {
             stage('Initialize') {
                 steps {
                     script { 
-                        // def libLoader = new org.mauro.LibLoader()
+                        def libLoader = new org.mauro.LibLoader()
                         libLoader.loadLib()
                         agentImage = templateLib.getDefaultAgent()
 
