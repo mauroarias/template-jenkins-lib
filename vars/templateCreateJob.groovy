@@ -1,3 +1,5 @@
+import org.mauro.LibLoader
+
 def call(body) {
     body.resolveStrategy = Closure.DELEGATE_FIRST
     body()
