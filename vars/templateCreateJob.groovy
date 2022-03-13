@@ -25,8 +25,6 @@ def call(body) {
                             choice(choices: ['gitHub', 'bitBucket'], name: 'gitDstRemote', description: 'git destination remote'),
                             string(defaultValue: '', name: 'serviceName', trim: true, description: 'project name')]
 
-                        hideTrace
-
                         sh "echo 'template: ${templateInfo.template}'"
                         sh "echo 'git remote: ${templateInfo.gitDstRemote}'"
                         sh "echo 'service name: ${templateInfo.serviceName}'"
