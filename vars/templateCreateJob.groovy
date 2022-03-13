@@ -15,8 +15,7 @@ def call(body) {
             stage('Initialize') {
                 steps {
                     script { 
-                        def loadingLib = new org.mauro.LibLoader()
-                        loadingLib.loadLib()
+                        LibLoader.loadLib()
                         agentImage = templateLib.getDefaultAgent()
 
                         templateInfo = input message: 'choose temlate', ok: 'Next',
@@ -24,6 +23,8 @@ def call(body) {
                             choice(choices: templateLib.getTemplates(), name: 'template', description: 'template type'),
                             choice(choices: ['gitHub', 'bitBucket'], name: 'gitDstRemote', description: 'git destination remote'),
                             string(defaultValue: '', name: 'serviceName', trim: true, description: 'project name')]
+
+                        hideTrace
 
                         sh "echo 'template: ${templateInfo.template}'"
                         sh "echo 'git remote: ${templateInfo.gitDstRemote}'"
