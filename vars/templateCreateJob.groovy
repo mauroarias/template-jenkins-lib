@@ -17,7 +17,7 @@ def call(body) {
                     script { 
                         def loadingLib = new org.mauro.LibLoader()
                         loadingLib.loadLib()
-                        agentImage = templateLib.getDefaultTemplate()
+                        agentImage = templateLib.getDefaultAgent()
 
                         templateInfo = input message: 'choose temlate', ok: 'Next',
                         parameters: [
