@@ -2,9 +2,9 @@ package org.mauro
     
 class LibLoader implements Serializable {
 
-    private static String libVersion = 'wip-0.1.0'
+    def private static String libVersion = 'wip-0.1.0'
 
-    static void loadLib () {
+    def public static void loadLib () {
         sh "echo 'loading lib version: ${libVersion}'"
         library identifier: "jenkins-share-lib@${libVersion}", retriever: 
             modernSCM(
