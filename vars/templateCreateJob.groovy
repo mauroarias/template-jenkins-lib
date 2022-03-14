@@ -1,5 +1,3 @@
-import org.mauro.LibLoader
-
 def call(body) {
     body.resolveStrategy = Closure.DELEGATE_FIRST
     body()
@@ -17,7 +15,7 @@ def call(body) {
             stage('Initialize') {
                 steps {
                     script { 
-                        LibLoader.loadLib()
+                        new org.mauro.LibLoader().loadLib()
                         agentImage = templateLib.getDefaultAgent()
 
                         templateInfo = input message: 'choose temlate', ok: 'Next',
