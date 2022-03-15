@@ -74,10 +74,22 @@ def call(body) {
                 }
                 steps {
                     script {
-                        gitLib.validateEnvVars("${gitDstRemote}")
-                        gitLib.createProjectIfNotExitsIfAppl("${gitDstRemote}", "${projectName}")
-                        if (gitLib.isRepositoryExits("${gitDstRemote}", "${serviceName}")) {
-                            error('repository already exits...!')
+                        withCredentials([
+                            usernamePassword(credentialsId: 'github-credentials',
+                            usernameVariable: 'gitHubUser',
+                            passwordVariable: 'gitHubPassword')
+                        ]) {
+                            withCredentials([
+                                usernamePassword(credentialsId: 'bitbucket-credentials',
+                                usernameVariable: 'biBucketuser',
+                                passwordVariable: 'biBucketPassword')
+                            ]) {
+                                gitLib.configGitRep(gitDstRemote)
+                                gitLib.createProjectIfNotExitsIfAppl(projectName)
+                                if (gitLib.isRepositoryExits(serviceName)) {
+                                    error('repository already exits...!')
+                                }
+                            }
                         }
                     }
                 }
