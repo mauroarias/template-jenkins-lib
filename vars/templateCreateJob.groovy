@@ -75,12 +75,12 @@ def call(body) {
                 steps {
                     script {
                         withCredentials([
-                            usernamePassword(credentialsId: 'github-credentials',
+                            usernamePassword(credentialsId: 'user-pass-credential-github-credentials',
                             usernameVariable: 'gitHubUser',
                             passwordVariable: 'gitHubPassword')
                         ]) {
                             withCredentials([
-                                usernamePassword(credentialsId: 'bitbucket-credentials',
+                                usernamePassword(credentialsId: 'user-pass-credential-bitbucket-credentials',
                                 usernameVariable: 'biBucketuser',
                                 passwordVariable: 'biBucketPassword')
                             ]) {
