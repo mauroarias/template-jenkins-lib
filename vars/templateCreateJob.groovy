@@ -20,12 +20,12 @@ def call(body) {
 
                         templateInfo = input message: 'choose temlate', ok: 'Next',
                         parameters: [
-                            choice(choices: templateLib.getTemplates(), name: 'templateName', description: 'template type'),
-                            choice(choices: ['gitHub', 'bitBucket'], name: 'gitDstRemote', description: 'git destination remote'),
-                            string(defaultValue: '', name: 'serviceName', trim: true, description: 'project name')]
-                        // def templateName = templateInfo.template
-                        // def gitDstRemote = templateInfo.gitDstRemote
-                        // def serviceName = templateInfo.serviceName
+                            choice(choices: templateLib.getTemplates(), name: 'template', description: 'template type'),
+                            choice(choices: ['gitHub', 'bitBucket'], name: 'gitDst', description: 'git destination remote'),
+                            string(defaultValue: '', name: 'service', trim: true, description: 'project name')]
+                        def templateName = templateInfo.template
+                        def gitDstRemote = templateInfo.gitDst
+                        def serviceName = templateInfo.service
 
                         sh "echo 'template: ${templateName}'"
                         sh "echo 'git remote: ${gitDstRemote}'"
