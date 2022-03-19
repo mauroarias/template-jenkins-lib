@@ -3,10 +3,7 @@ def call(body) {
     body()
 
     pipeline {
-        // agent any
-        agent {
-            docker 'universal-agent:0.1.0'
-        }
+        agent any
         options {
             timestamps()
             disableConcurrentBuilds()
@@ -69,6 +66,9 @@ def call(body) {
                 }
             }
             stage('Getting git repository') {
+                agent {
+                    docker 'universal-agent:0.1.0'
+                }
                 when {
                     expression { 
                         return params.manualTrigger
@@ -97,6 +97,9 @@ def call(body) {
                     expression { 
                         return params.manualTrigger
                     }
+                }
+                agent {
+                    docker 'universal-agent:0.1.0'
                 }
                 steps {
                     script {
