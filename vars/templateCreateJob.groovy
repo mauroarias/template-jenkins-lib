@@ -13,6 +13,11 @@ def call(body) {
         }    
         stages {
             stage('Initialize') {
+                when {
+                    expression { 
+                        return params.manualTrigger
+                    }
+                }
                 steps {
                     script { 
                         new org.mauro.LibLoader().loadLib()
