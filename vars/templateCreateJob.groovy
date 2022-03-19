@@ -3,7 +3,10 @@ def call(body) {
     body()
 
     pipeline {
-        agent any
+        // agent any
+        agent {
+            docker 'universal-agent:0.1.0'
+        }
         options {
             timestamps()
             disableConcurrentBuilds()
@@ -16,7 +19,6 @@ def call(body) {
                 steps {
                     script { 
                         new org.mauro.LibLoader().loadLib()
-                        agentImage = templateLib.getDefaultAgent()
 
                         templateInfo = input message: 'choose temlate', ok: 'Next',
                         parameters: [
@@ -84,11 +86,7 @@ def call(body) {
                                 usernameVariable: 'biBucketuser',
                                 passwordVariable: 'biBucketPassword')
                             ]) {
-                                gitLib.configGitRep(gitDstRemote)
-                                gitLib.createProjectIfNotExitsIfAppl(projectName)
-                                if (gitLib.isRepositoryExits(serviceName)) {
-                                    error('repository already exits...!')
-                                }
+                                templateLib.gettingGitRepository("${gitDstRemote}", "${projectName}", "${serviceName}")
                             }
                         }
                     }
@@ -104,7 +102,6 @@ def call(body) {
                     script {
                         branch = templateLib.getBranch("${templateName}")
                         template =  templateLib.getTemplateType("${templateName}")
-                        agentImage =  templateLib.getAgentByTemplate("${templateName}")
                     }
                 }
             }
@@ -114,35 +111,21 @@ def call(body) {
                         return params.manualTrigger
                     }
                 }
-                agent {
-                    docker "${agentImage}"
-                }
                 steps {
                     script {
-                        gitLib.cloneRepoWithBranch("${branch}", "${template}")
-                        sh "echo ${serviceName}"
-                        sh "rm -rf ${serviceName}"
-                        sh "./${template}/prepare.sh ${serviceName}"
-                        sh "mv ${template} ${serviceName}"
-                        sh "rm ${serviceName}/prepare.sh"
-                        jenkinsLib.stash('template', "${serviceName}/**/*", "${serviceName}/.git", false)
-                    }
-                }
-            }
-            stage('Prepare git') {
-                when {
-                    expression { 
-                        return params.manualTrigger
-                    }
-                }
-                steps {
-                    script { 
-                        unstash 'template'
-                        dir("${serviceName}") {
-                            gitLib.createRepo("${gitDstRemote}", "${serviceName}", "${projectName}")
-                            jenkinsLib.createJenkinsPipelineFileWithLib("${templateLib.getCiPipeline()}", "${templateLib.getCiVersion()}")
-                            gitLib.initRepo("${gitDstRemote}", "${GIT_EMAIL}", "${GIT_USER}", "${serviceName}", 'origin')
-                            gitLib.commitAndPushRepo('origin', 'develop', 'first draft')
+                        withCredentials([
+                            usernamePassword(credentialsId: 'user-pass-credential-github-credentials',
+                            usernameVariable: 'gitHubUser',
+                            passwordVariable: 'gitHubPassword')
+                        ]) {
+                            withCredentials([
+                                usernamePassword(credentialsId: 'user-pass-credential-bitbucket-credentials',
+                                usernameVariable: 'biBucketuser',
+                                passwordVariable: 'biBucketPassword')
+                            ]) {
+                                templateLib.applyGitRepository("${gitDstRemote}", "${projectName}", "${serviceName}")
+                                jenkinsLib.createJenkinsPipelineFileWithLib("${templateLib.getCiPipeline()}", "${templateLib.getCiVersion()}")
+                            }
                         }
                     }
                 }
