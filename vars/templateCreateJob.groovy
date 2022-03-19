@@ -27,12 +27,12 @@ def call(body) {
                             choice(choices: templateLib.getTemplates(), name: 'template', description: 'template type'),
                             choice(choices: ['gitHub', 'bitBucket'], name: 'gitDst', description: 'git destination remote'),
                             string(defaultValue: '', name: 'service', trim: true, description: 'project name')]
-                        templateName = templateInfo.template
+                        templateFullName = templateInfo.template
                         gitDstRemote = templateInfo.gitDst
                         serviceName = templateInfo.service
                         branch= 
 
-                        sh "echo 'template: ${templateName}'"
+                        sh "echo 'template: ${templateFullName}'"
                         sh "echo 'git remote: ${gitDstRemote}'"
                         sh "echo 'service name: ${serviceName}'"
                         sh "echo 'manual trigger: ${params.manualTrigger}'"
@@ -98,22 +98,6 @@ def call(body) {
                     }
                 }
             }
-            stage('Preparing templating type') {
-                when {
-                    expression { 
-                        return params.manualTrigger
-                    }
-                }
-                agent {
-                    docker 'universal-agent:0.1.0'
-                }
-                steps {
-                    script {
-                        branch = templateLib.getBranch("${templateName}")
-                        template =  templateLib.getTemplateType("${templateName}")
-                    }
-                }
-            }
             stage('Applying template') {
                 when {
                     expression { 
@@ -132,7 +116,7 @@ def call(body) {
                                 usernameVariable: 'biBucketuser',
                                 passwordVariable: 'biBucketPassword')
                             ]) {
-                                templateLib.applyGitRepository("${gitDstRemote}", "${serviceName}", "${templateName}", "${branch}")
+                                templateLib.applyGitRepository("${gitDstRemote}", "${serviceName}", "${templateFullName}")
                                 jenkinsLib.createJenkinsPipelineFileWithLib("${templateLib.getCiPipeline()}", "${templateLib.getCiVersion()}")
                             }
                         }
