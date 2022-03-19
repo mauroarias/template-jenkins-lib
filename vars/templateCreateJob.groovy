@@ -30,6 +30,7 @@ def call(body) {
                         templateName = templateInfo.template
                         gitDstRemote = templateInfo.gitDst
                         serviceName = templateInfo.service
+                        branch= 
 
                         sh "echo 'template: ${templateName}'"
                         sh "echo 'git remote: ${gitDstRemote}'"
@@ -131,7 +132,7 @@ def call(body) {
                                 usernameVariable: 'biBucketuser',
                                 passwordVariable: 'biBucketPassword')
                             ]) {
-                                templateLib.applyGitRepository("${gitDstRemote}", "${projectName}", "${serviceName}")
+                                templateLib.applyGitRepository("${gitDstRemote}", "${serviceName}", "${templateName}", "${branch}")
                                 jenkinsLib.createJenkinsPipelineFileWithLib("${templateLib.getCiPipeline()}", "${templateLib.getCiVersion()}")
                             }
                         }
