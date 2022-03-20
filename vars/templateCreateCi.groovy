@@ -10,7 +10,7 @@ def call(body) {
         }
         parameters {
             booleanParam(defaultValue: false, name: 'manualTrigger', description: 'manual trigger')
-            string(defaultValue: '', name: 'gitRemote', description: 'dont use this entry in manual steps')
+            string(defaultValue: '', name: 'gitDstRemote', description: 'dont use this entry in manual steps')
             string(defaultValue: '', name: 'projectName', description: 'dont use this entry in manual steps')
             string(defaultValue: '', name: 'serviceName', description: 'dont use this entry in manual steps')
         }    
@@ -18,14 +18,13 @@ def call(body) {
             stage('Initialize') {
                 when {
                     expression { 
-                        return params.manualTrigger || (!params.gitRemote.equals('') && !params.projectName.equals('') && !params.serviceName.equals(''))
+                        return params.manualTrigger || (!params.gitDstRemote.equals('') && !params.projectName.equals('') && !params.serviceName.equals(''))
                     }
                 }
                 steps {
                     script { 
                         sh "echo 'manual trigger: ${params.manualTrigger}'"
-                        def loadingLib = new org.mauro.LibLoader()
-                        loadingLib.loadLib()
+                        new org.mauro.LibLoader().loadLib()
                         jenkinsLib.downloadJenkinsCli()
                     }
                 }
@@ -33,16 +32,16 @@ def call(body) {
             stage('validate') {
                 when {
                     expression { 
-                        return (!params.gitRemote.equals('') && !params.projectName.equals('') && !params.serviceName.equals(''))
+                        return (!params.gitDstRemote.equals('') && !params.projectName.equals('') && !params.serviceName.equals(''))
                     }
                 }
                 steps {
                     script { 
-                        gitRemote = "${params.gitRemote}"
+                        gitDstRemote = "${params.gitDstRemote}"
                         projectName = "${params.projectName}"
                         serviceName = "${params.serviceName}"
                         sh "echo 'manual trigger: ${params.manualTrigger}'"
-                        sh "echo 'git repository remote: ${gitRemote}'"
+                        sh "echo 'git repository remote: ${gitDstRemote}'"
                         sh "echo 'project: ${projectName}'"
                         sh "echo 'service name: ${serviceName}'"
                     }
@@ -59,10 +58,10 @@ def call(body) {
                         script {
                             inputGitRemote = input message: 'choose git remote', ok: 'Next',
                             parameters: [
-                                choice(name: 'gitRemoteCi', choices: ['gitHub', 'bitBucket']),
+                                choice(name: 'gitDstRemoteCi', choices: ['gitHub', 'bitBucket']),
                                 string(name: 'x')]
-                            gitRemote = "${inputGitRemote.gitRemoteCi}"
-                            sh "echo 'git repository remote: ${gitRemote}'"
+                            gitDstRemote = "${inputGitRemote.gitDstRemoteCi}"
+                            sh "echo 'git repository remote: ${gitDstRemote}'"
                         }
                     }
                 }
@@ -106,7 +105,7 @@ def call(body) {
                         script {
                             inputRepo = input message: "choose service name", ok: 'Next',
                             parameters: [
-                                choice(choices: gitLib.getRepos("${gitRemote}", "${projectName}"), name: 'repo', description: 'choose service name'),
+                                choice(choices: gitLib.getRepos("${gitDstRemote}", "${projectName}"), name: 'repo', description: 'choose service name'),
                                 string(name: 'x')]
                             serviceName = "${inputRepo.repo}"
                             sh "echo 'service name: ${serviceName}'"
@@ -117,14 +116,16 @@ def call(body) {
             stage('create jenkins job') {
                 when {
                     expression { 
-                        return params.manualTrigger || (!params.gitRemote.equals('') && !params.projectName.equals('') && !params.serviceName.equals(''))
+                        return params.manualTrigger || (!params.gitDstRemote.equals('') && !params.projectName.equals('') && !params.serviceName.equals(''))
                     }
+                }
+                environment {
+                    GIT_HUB_CRED = credentials('user-pass-credential-github-credentials')
+                    BIT_BUCKET_CRED = credentials('user-pass-credential-bitbucket-credentials')
                 }
                 steps {
                     script { 
-                        repoOwner=gitLib.getRepoOwner("${gitRemote}")
-                        repoUrl=gitLib.getPathRepo("${gitRemote}", "${serviceName}")
-                        jenkinsLib.createJenkinsMultibranchJobWithLib("${gitRemote}", "${serviceName}", "${projectName}", "${serviceName}", "${repoOwner}", "${repoUrl}")
+                        jenkinsLib.createJenkinsMultibranchJobWithLib("${gitDstRemote}", "${serviceName}", "${projectName}", "${serviceName}")
                     }
                 }
             }
