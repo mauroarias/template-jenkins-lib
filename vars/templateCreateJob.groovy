@@ -80,21 +80,13 @@ def call(body) {
                 agent {
                     docker 'universal-agent:0.1.0'
                 }
+                environment {
+                    GIT_HUB_CRED = credentials('user-pass-credential-github-credentials')
+                    BIT_BUCKET_CRED = credentials('user-pass-credential-bitbucket-credentials')
+                }
                 steps {
                     script {
-                        withCredentials([
-                            usernamePassword(credentialsId: 'user-pass-credential-github-credentials',
-                            usernameVariable: 'gitHubUser',
-                            passwordVariable: 'gitHubPassword')
-                        ]) {
-                            withCredentials([
-                                usernamePassword(credentialsId: 'user-pass-credential-bitbucket-credentials',
-                                usernameVariable: 'biBucketuser',
-                                passwordVariable: 'biBucketPassword')
-                            ]) {
-                                templateLib.gettingGitRepository("${gitDstRemote}", "${projectName}", "${serviceName}")
-                            }
-                        }
+                        templateLib.gettingGitRepository("${gitDstRemote}", "${projectName}", "${serviceName}")
                     }
                 }
             }
@@ -107,21 +99,15 @@ def call(body) {
                 agent {
                     docker 'universal-agent:0.1.0'
                 }
+                environment {
+                    GIT_HUB_CRED = credentials('user-pass-credential-github-credentials')
+                    BIT_BUCKET_CRED = credentials('user-pass-credential-bitbucket-credentials')
+                }
                 steps {
                     script {
-                        withCredentials([
-                            usernamePassword(credentialsId: 'user-pass-credential-github-credentials',
-                            usernameVariable: 'gitHubUser',
-                            passwordVariable: 'gitHubPassword')
-                        ]) {
-                            withCredentials([
-                                usernamePassword(credentialsId: 'user-pass-credential-bitbucket-credentials',
-                                usernameVariable: 'biBucketuser',
-                                passwordVariable: 'biBucketPassword')
-                            ]) {
-                                templateLib.applyGitRepository("${gitDstRemote}", "${serviceName}", "${templateFullName}")
-                                jenkinsLib.createJenkinsPipelineFileWithLib("${templateLib.getCiPipeline()}", "${templateLib.getCiVersion()}")
-                            }
+                        templateLib.applyGitRepository("${gitDstRemote}", "${serviceName}", "${templateFullName}")
+                        dir("${serviceName}") {
+                            jenkinsLib.createJenkinsPipelineFileWithLib("${templateLib.getCiPipeline()}", "${templateLib.getCiVersion()}")
                         }
                     }
                 }
