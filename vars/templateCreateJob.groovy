@@ -106,7 +106,7 @@ def call(body) {
                 }
                 steps {
                     script {
-                        templateLib.applyGitRepository("${gitDstRemote}", "${serviceName}", "${templateFullName}", "${projectName}")
+                        templateLib.applyGitRepository(gitDstRemote, serviceName, templateFullName, projectName)
                     }
                 }
             }
@@ -118,9 +118,9 @@ def call(body) {
                 }
                 steps {
                     script {
-                        build job: 'create-ci-cd-jobs', wait: true, parameters: [string(name: 'gitDstRemote', value: String.valueOf("${gitDstRemote}")),
-                                                                                        string(name: 'projectName', value: String.valueOf("${projectName}")),
-                                                                                        string(name: 'serviceName', value: String.valueOf("${serviceName}"))]
+                        build job: 'create-ci-cd-jobs', wait: true, parameters: [string(name: 'gitDstRemote', value: String.valueOf(gitDstRemote)),
+                                                                                        string(name: 'projectName', value: String.valueOf(projectName)),
+                                                                                        string(name: 'serviceName', value: String.valueOf(serviceName))]
                     }
                 }
             }

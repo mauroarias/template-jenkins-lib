@@ -37,9 +37,9 @@ def call(body) {
                 }
                 steps {
                     script { 
-                        gitDstRemote = "${params.gitDstRemote}"
-                        projectName = "${params.projectName}"
-                        serviceName = "${params.serviceName}"
+                        gitDstRemote = params.gitDstRemote
+                        projectName = params.projectName
+                        serviceName = params.serviceName
                         sh "echo 'manual trigger: ${params.manualTrigger}'"
                         sh "echo 'git repository remote: ${gitDstRemote}'"
                         sh "echo 'project: ${projectName}'"
@@ -60,7 +60,7 @@ def call(body) {
                             parameters: [
                                 choice(name: 'gitDstRemoteCi', choices: ['gitHub', 'bitBucket']),
                                 string(name: 'x')]
-                            gitDstRemote = "${inputGitRemote.gitDstRemoteCi}"
+                            gitDstRemote = inputGitRemote.gitDstRemoteCi
                             sh "echo 'git repository remote: ${gitDstRemote}'"
                         }
                     }
@@ -84,10 +84,10 @@ def call(body) {
                                 if ("${inputProjectsCi.project}" == '') {   
                                     error('new project must be defined...!')
                                 }
-                                jenkinsLib.createProjectIfNotExits( "${inputProjectsCi.project}")
-                                projectName = "${inputProjectsCi.project}"
+                                jenkinsLib.createProjectIfNotExits(inputProjectsCi.project)
+                                projectName = inputProjectsCi.project
                             } else {
-                                projectName = "${inputProjectsCi.projectsCi}"
+                                projectName = inputProjectsCi.projectsCi
                             }
                             sh "echo 'project: ${projectName}'"
                         }
@@ -105,9 +105,9 @@ def call(body) {
                         script {
                             inputRepo = input message: "choose service name", ok: 'Next',
                             parameters: [
-                                choice(choices: gitLib.getRepos("${gitDstRemote}", "${projectName}"), name: 'repo', description: 'choose repository'),
+                                choice(choices: gitLib.getRepos(gitDstRemote, projectName), name: 'repo', description: 'choose repository'),
                                 string(name: 'x')]
-                            serviceName = "${inputRepo.repo}"
+                            serviceName = inputRepo.repo
                             sh "echo 'service name: ${serviceName}'"
                         }
                     }
@@ -123,18 +123,18 @@ def call(body) {
                     stage('Ci job') {
                         steps {
                             script {
-                                build job: 'create-ci-job', wait: true, parameters: [string(name: 'gitDstRemote', value: String.valueOf("${gitDstRemote}")),
-                                                                                     string(name: 'projectName', value: String.valueOf("${projectName}")),
-                                                                                     string(name: 'serviceName', value: String.valueOf("${serviceName}"))]
+                                build job: 'create-ci-job', wait: true, parameters: [string(name: 'gitDstRemote', value: String.valueOf(gitDstRemote)),
+                                                                                     string(name: 'projectName', value: String.valueOf(projectName)),
+                                                                                     string(name: 'serviceName', value: String.valueOf(serviceName))]
                             }
                         }
                     }
                     stage('cd job') {
                         steps {
                             script {
-                                build job: 'create-cd-job', wait: true, parameters: [string(name: 'gitDstRemote', value: String.valueOf("${gitDstRemote}")),
-                                                                                     string(name: 'projectName', value: String.valueOf("${projectName}")),
-                                                                                     string(name: 'serviceName', value: String.valueOf("${serviceName}"))]
+                                build job: 'create-cd-job', wait: true, parameters: [string(name: 'gitDstRemote', value: String.valueOf(gitDstRemote)),
+                                                                                     string(name: 'projectName', value: String.valueOf(projectName)),
+                                                                                     string(name: 'serviceName', value: String.valueOf(serviceName))]
                             }
                         }
                     }
