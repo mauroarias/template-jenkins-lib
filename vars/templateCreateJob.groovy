@@ -107,9 +107,6 @@ def call(body) {
                 steps {
                     script {
                         templateLib.applyGitRepository("${gitDstRemote}", "${serviceName}", "${templateFullName}", "${projectName}")
-                        dir("${serviceName}") {
-                            jenkinsLib.createJenkinsPipelineFileWithLib("${templateLib.getCiPipeline()}", "${templateLib.getCiVersion()}")
-                        }
                     }
                 }
             }
