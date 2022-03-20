@@ -30,6 +30,7 @@ def call(body) {
                         templateFullName = templateInfo.template
                         gitDstRemote = templateInfo.gitDst
                         serviceName = templateInfo.service
+                        agentName=templateLib.getDefaultAgent()
 
                         sh "echo 'template: ${templateFullName}'"
                         sh "echo 'git remote: ${gitDstRemote}'"
@@ -66,6 +67,7 @@ def call(body) {
                                 projectName=input_parameters.projects
                             }
                             sh "echo 'project created: ${projectName}'"
+                            agentName=templateLib.getTemplateAgent(templateFullName)
                         }
                     }
                 }
@@ -77,7 +79,7 @@ def call(body) {
                     }
                 }
                 agent {
-                    docker 'universal-agent:0.1.0'
+                    docker "${agentName}"
                 }
                 environment {
                     GIT_HUB_CRED = credentials('user-pass-credential-github-credentials')
@@ -96,7 +98,7 @@ def call(body) {
                     }
                 }
                 agent {
-                    docker 'universal-agent:0.1.0'
+                    docker "${agentName}"
                 }
                 environment {
                     GIT_HUB_CRED = credentials('user-pass-credential-github-credentials')
