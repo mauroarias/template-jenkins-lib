@@ -35,8 +35,6 @@ def call(body) {
                         sh "echo 'git remote: ${gitDstRemote}'"
                         sh "echo 'service name: ${serviceName}'"
                         sh "echo 'manual trigger: ${params.manualTrigger}'"
-                        gitLib.configGitRep(gitDstRemote)
-                        gitLib.createProjectIfNotExitsIfAppl(this, serviceName)
                     }
                 }
             }
@@ -62,10 +60,10 @@ def call(body) {
                                 if ("${input_parameters.project}" == '') {   
                                     error('new project must be defined...!')
                                 }
-                                jenkinsLib.createProjectIfNotExits("${input_parameters.project}")
-                                projectName = "${input_parameters.project}"
+                                jenkinsLib.createProjectIfNotExits(input_parameters.project)
+                                projectName=input_parameters.project
                             } else {
-                                projectName = "${input_parameters.projects}"
+                                projectName=input_parameters.projects
                             }
                             sh "echo 'project created: ${projectName}'"
                         }
@@ -87,7 +85,7 @@ def call(body) {
                 }
                 steps {
                     script {
-                        templateLib.gettingGitRepository("${gitDstRemote}", "${projectName}", "${serviceName}")
+                        templateLib.gettingGitRepository(gitDstRemote, projectName, serviceName)
                     }
                 }
             }
@@ -106,7 +104,7 @@ def call(body) {
                 }
                 steps {
                     script {
-                        templateLib.applyGitRepository("${gitDstRemote}", "${serviceName}", "${templateFullName}")
+                        templateLib.applyGitRepository("${gitDstRemote}", "${serviceName}", "${templateFullName}", "${projectName}")
                         dir("${serviceName}") {
                             jenkinsLib.createJenkinsPipelineFileWithLib("${templateLib.getCiPipeline()}", "${templateLib.getCiVersion()}")
                         }
@@ -136,13 +134,4 @@ def call(body) {
             }
         }
     }
-}
-
-def loadLib () {
-    def libVersion = 'wip-0.1.0'
-    sh "echo 'loading lib version: ${libVersion}'"
-    library identifier: "jenkins-share-lib@${libVersion}", retriever: 
-        modernSCM(
-            [$class: 'GitSCMSource',
-            remote: 'https://github.com/mauroarias/jenkins-share-lib.git'])
 }
