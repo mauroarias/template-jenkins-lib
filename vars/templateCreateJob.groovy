@@ -35,7 +35,8 @@ def call(body) {
                         sh "echo 'git remote: ${gitDstRemote}'"
                         sh "echo 'service name: ${serviceName}'"
                         sh "echo 'manual trigger: ${params.manualTrigger}'"
-                        gitLib.createProjectIfNotExitsIfAppl("${gitDstRemote}")
+                        gitLib.configGitRep("${gitDstRemote}")
+                        gitLib.createProjectIfNotExitsIfAppl("${serviceName}")
                     }
                 }
             }
