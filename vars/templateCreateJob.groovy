@@ -31,6 +31,7 @@ def call(body) {
                         gitDstRemote = templateInfo.gitDst
                         serviceName = templateInfo.service
                         agentName=templateLib.getDefaultAgent()
+                        templateLib.config(templateFullName)
 
                         sh "echo 'template: ${templateFullName}'"
                         sh "echo 'git remote: ${gitDstRemote}'"
@@ -67,7 +68,7 @@ def call(body) {
                                 projectName=input_parameters.projects
                             }
                             sh "echo 'project created: ${projectName}'"
-                            agentName=templateLib.getTemplateAgent(templateFullName)
+                            agentName=templateLib.getTemplateAgent()
                         }
                     }
                 }

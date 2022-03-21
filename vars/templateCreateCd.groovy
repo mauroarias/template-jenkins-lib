@@ -24,8 +24,7 @@ def call(body) {
                 steps {
                     script { 
                         sh "echo 'manual trigger: ${params.manualTrigger}'"
-                        def loadingLib = new org.mauro.LibLoader()
-                        loadingLib.loadLib()
+                        new org.mauro.LibLoader().loadLib()
                         jenkinsLib.downloadJenkinsCli()
                     }
                 }
