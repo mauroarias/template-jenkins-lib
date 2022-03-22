@@ -2,6 +2,8 @@ def call(body) {
     body.resolveStrategy = Closure.DELEGATE_FIRST
     body()
 
+    def agentName='alpine'
+
     pipeline {
         agent any
         options {
@@ -30,7 +32,6 @@ def call(body) {
                         templateFullName = templateInfo.template
                         gitDstRemote = templateInfo.gitDst
                         serviceName = templateInfo.service
-                        agentName='alpine'
                         templateLib.config(templateFullName)
 
                         sh "echo 'template: ${templateFullName}'"
