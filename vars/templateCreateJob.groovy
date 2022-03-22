@@ -30,7 +30,7 @@ def call(body) {
                         templateFullName = templateInfo.template
                         gitDstRemote = templateInfo.gitDst
                         serviceName = templateInfo.service
-                        agentName=templateLib.getDefaultAgent()
+                        agentName='alpine'
                         templateLib.config(templateFullName)
 
                         sh "echo 'template: ${templateFullName}'"
