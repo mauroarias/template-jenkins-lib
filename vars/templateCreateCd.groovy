@@ -130,8 +130,8 @@ def call(body) {
                 steps {
                     script {
                         gitLib.cloneRepo(serviceName)
-                        templateLib.configUsingManifest()
                         dir(serviceName) {
+                            templateLib.configUsingManifest()
                             jenkinsLib.createPipelineJobWithLib("${serviceName}-deployment", projectName, serviceName)
                         }
                     }
