@@ -2,6 +2,8 @@ def call(body) {
     body.resolveStrategy = Closure.DELEGATE_FIRST
     body()
 
+    def agentName='alpine'
+
     pipeline {
         agent any
         options {
@@ -9,22 +11,33 @@ def call(body) {
             disableConcurrentBuilds()
         }
         parameters {
-            choice(choices: ['maven java8', 'maven java11'], name: 'template', description: 'template type')
-            choice(choices: ['gitHub', 'bitBucket'], name: 'gitRemote', description: 'git remote')
-            string(defaultValue: '', name: 'serviceName', trim: true, description: 'project name')
             booleanParam(defaultValue: false, name: 'manualTrigger', description: 'manual trigger')
         }    
         stages {
             stage('Initialize') {
+                when {
+                    expression { 
+                        return params.manualTrigger
+                    }
+                }
                 steps {
                     script { 
-                        sh "echo 'template: ${params.template}'"
-                        sh "echo 'git remote: ${params.gitRemote}'"
-                        sh "echo 'service name: ${params.serviceName}'"
+                        new org.mauro.LibLoader().loadLib()
+
+                        templateInfo = input message: 'choose temlate', ok: 'Next',
+                        parameters: [
+                            choice(choices: templateLib.getTemplates(), name: 'template', description: 'template type'),
+                            choice(choices: ['gitHub', 'bitBucket'], name: 'gitDst', description: 'git destination remote'),
+                            string(defaultValue: '', name: 'service', trim: true, description: 'project name')]
+                        templateFullName = templateInfo.template
+                        gitDstRemote = templateInfo.gitDst
+                        serviceName = templateInfo.service
+                        templateLib.config(templateFullName)
+
+                        sh "echo 'template: ${templateFullName}'"
+                        sh "echo 'git remote: ${gitDstRemote}'"
+                        sh "echo 'service name: ${serviceName}'"
                         sh "echo 'manual trigger: ${params.manualTrigger}'"
-                        def loadingLib = new org.mauro.LibLoader()
-                        loadingLib.loadLib()
-                        agentImage = 'alpine'
                     }
                 }
             }
@@ -37,7 +50,7 @@ def call(body) {
                 steps {
                     timeout(time: 3, unit: 'MINUTES') {
                         script { 
-                            if ("${params.serviceName}" == '') {   
+                            if ("${serviceName}" == '') {   
                                 error('service name must be defined...!')
                             }
                             jenkinsLib.downloadJenkinsCli()
@@ -50,12 +63,13 @@ def call(body) {
                                 if ("${input_parameters.project}" == '') {   
                                     error('new project must be defined...!')
                                 }
-                                jenkinsLib.createProjectIfNotExits("${input_parameters.project}")
-                                projectName = "${input_parameters.project}"
+                                jenkinsLib.createProjectIfNotExits(input_parameters.project)
+                                projectName=input_parameters.project
                             } else {
-                                projectName = "${input_parameters.projects}"
+                                projectName=input_parameters.projects
                             }
                             sh "echo 'project created: ${projectName}'"
+                            agentName=templateLib.getTemplateAgent()
                         }
                     }
                 }
@@ -66,27 +80,16 @@ def call(body) {
                         return params.manualTrigger
                     }
                 }
-                steps {
-                    script {
-                        gitLib.validateEnvVars("${params.gitRemote}")
-                        gitLib.createProjectIfNotExitsIfAppl("${params.gitRemote}", "${projectName}")
-                        if (gitLib.isRepositoryExits("${params.gitRemote}", "${params.serviceName}")) {
-                            error('repository already exits...!')
-                        }
-                    }
+                agent {
+                    docker "${agentName}"
                 }
-            }
-            stage('Preparing templating type') {
-                when {
-                    expression { 
-                        return params.manualTrigger
-                    }
+                environment {
+                    GIT_HUB_CRED = credentials('user-pass-credential-github-credentials')
+                    BIT_BUCKET_CRED = credentials('user-pass-credential-bitbucket-credentials')
                 }
                 steps {
                     script {
-                        branch = templateLib.getBranch("${params.template}")
-                        template =  templateLib.getTemplateType("${params.template}")
-                        agentImage =  templateLib.getAgentByTemplate("${params.template}")
+                        templateLib.gettingGitRepository(gitDstRemote, projectName, serviceName)
                     }
                 }
             }
@@ -97,35 +100,15 @@ def call(body) {
                     }
                 }
                 agent {
-                    docker "${agentImage}"
+                    docker "${agentName}"
+                }
+                environment {
+                    GIT_HUB_CRED = credentials('user-pass-credential-github-credentials')
+                    BIT_BUCKET_CRED = credentials('user-pass-credential-bitbucket-credentials')
                 }
                 steps {
                     script {
-                        gitLib.cloneRepoWithBranch("${params.gitRemote}", "${branch}", "${template}")
-                        sh "echo ${params.serviceName}"
-                        sh "rm -rf ${params.serviceName}"
-                        sh "./${template}/prepare.sh ${params.serviceName}"
-                        sh "mv ${template} ${params.serviceName}"
-                        sh "rm ${params.serviceName}/prepare.sh"
-                        jenkinsLib.stash('template', "${params.serviceName}/**/*", "${params.serviceName}/.git", false)
-                    }
-                }
-            }
-            stage('Prepare git') {
-                when {
-                    expression { 
-                        return params.manualTrigger
-                    }
-                }
-                steps {
-                    script { 
-                        unstash 'template'
-                        dir("${params.serviceName}") {
-                            gitLib.createRepo("${params.gitRemote}", "${params.serviceName}", "${projectName}")
-                            jenkinsLib.createJenkinsPipelineFileWithLib("${templateLib.getCiPipeline()}", "${templateLib.getCiVersion()}")
-                            gitLib.initRepo("${params.gitRemote}", "${GIT_EMAIL}", "${GIT_USER}", "${params.serviceName}", 'origin')
-                            gitLib.commitAndPushRepo('origin', 'develop', 'first draft')
-                        }
+                        templateLib.applyGitRepository(gitDstRemote, serviceName, templateFullName, projectName)
                     }
                 }
             }
@@ -137,9 +120,9 @@ def call(body) {
                 }
                 steps {
                     script {
-                        build job: 'create-ci-cd-jobs', wait: true, parameters: [string(name: 'gitRemote', value: String.valueOf("${params.gitRemote}")),
-                                                                                        string(name: 'projectName', value: String.valueOf("${projectName}")),
-                                                                                        string(name: 'serviceName', value: String.valueOf("${params.serviceName}"))]
+                        build job: 'create-ci-cd-jobs', wait: true, parameters: [string(name: 'gitDstRemote', value: String.valueOf(gitDstRemote)),
+                                                                                        string(name: 'projectName', value: String.valueOf(projectName)),
+                                                                                        string(name: 'serviceName', value: String.valueOf(serviceName))]
                     }
                 }
             }
