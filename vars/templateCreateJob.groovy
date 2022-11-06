@@ -27,7 +27,7 @@ def call(body) {
                         templateInfo = input message: 'choose temlate', ok: 'Next',
                         parameters: [
                             choice(choices: templateLib.getTemplates(), name: 'template', description: 'template type'),
-                            choice(choices: ['gitHub', 'bitBucket'], name: 'gitDst', description: 'git destination remote'),
+                            choice(choices: gitLib.getGitDstRepos(), name: 'gitDst', description: 'git destination remote'),
                             string(defaultValue: '', name: 'service', trim: true, description: 'project name')]
                         templateFullName = templateInfo.template
                         gitDstRemote = templateInfo.gitDst
@@ -69,7 +69,6 @@ def call(body) {
                                 projectName=input_parameters.projects
                             }
                             sh "echo 'project created: ${projectName}'"
-                            agentName=templateLib.getTemplateAgent()
                         }
                     }
                 }
@@ -79,9 +78,6 @@ def call(body) {
                     expression { 
                         return params.manualTrigger
                     }
-                }
-                agent {
-                    docker "${agentName}"
                 }
                 environment {
                     GIT_HUB_CRED = credentials('user-pass-credential-github-credentials')
@@ -98,9 +94,6 @@ def call(body) {
                     expression { 
                         return params.manualTrigger
                     }
-                }
-                agent {
-                    docker "${agentName}"
                 }
                 environment {
                     GIT_HUB_CRED = credentials('user-pass-credential-github-credentials')
