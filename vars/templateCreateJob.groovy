@@ -2,10 +2,12 @@ def call(body) {
     body.resolveStrategy = Closure.DELEGATE_FIRST
     body()
 
-    def agentName='ghcr.io/mauroarias/inbound-agent:0.0.1'
-
     pipeline {
-        agent any
+        agent {
+            docker {
+                image 'ghcr.io/mauroarias/inbound-agent:0.0.1'
+            }
+        }
         options {
             timestamps()
             disableConcurrentBuilds()

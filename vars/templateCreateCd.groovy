@@ -3,7 +3,11 @@ def call(body) {
     body()
 
     pipeline {
-        agent any
+        agent {
+            docker {
+                image 'ghcr.io/mauroarias/inbound-agent:0.0.1'
+            }
+        }
         options {
             timestamps()
             disableConcurrentBuilds()
