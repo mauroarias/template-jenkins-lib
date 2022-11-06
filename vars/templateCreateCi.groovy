@@ -72,6 +72,9 @@ def call(body) {
                         return params.manualTrigger
                     }
                 }
+                environment {
+                    JENKINS_CRED = credentials('user-pass-credential-jenkins-credentials')
+                }
                 steps {
                     timeout(time: 3, unit: 'MINUTES') {
                         script { 
@@ -126,6 +129,7 @@ def call(body) {
                 environment {
                     GIT_HUB_CRED = credentials('user-pass-credential-github-credentials')
                     BIT_BUCKET_CRED = credentials('user-pass-credential-bitbucket-credentials')
+                    JENKINS_CRED = credentials('user-pass-credential-jenkins-credentials')
                 }
                 steps {
                     script { 

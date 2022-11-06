@@ -72,6 +72,9 @@ def call(body) {
                         return params.manualTrigger
                     }
                 }
+                environment {
+                    JENKINS_CRED = credentials('user-pass-credential-jenkins-credentials')
+                }
                 steps {
                     timeout(time: 3, unit: 'MINUTES') {
                         script { 
