@@ -47,24 +47,25 @@ def call(body) {
                 }
                 environment {
                     JENKINS_CRED = credentials('user-pass-credential-jenkins-credentials')
+                    JENKINS_HOST = credentials('jenkins-addr')
                 }
                 steps {
                     timeout(time: 3, unit: 'MINUTES') {
-                        script { 
+                        script {
                             if ("${serviceName}" == '') {   
                                 error('service name must be defined...!')
                             }
-                            jenkinsLib.downloadJenkinsCli()
+                            jenkinsLib.downloadJenkinsCli("${JENKINS_HOST}")
                             input_parameters = input message: 'choose project', ok: 'Next',
                             parameters: [
-                                choice(choices: jenkinsLib.getprojects(), name: 'projects', description: 'choose project'),
+                                choice(choices: jenkinsLib.getprojects("${JENKINS_HOST}"), name: 'projects', description: 'choose project'),
                                 booleanParam(defaultValue: false, name: 'newProject', description: 'create a new project'),
                                 string(defaultValue: '', name: 'project', trim: true, required: true, description: 'new project name')]
                             if (input_parameters.newProject) {
                                 if ("${input_parameters.project}" == '') {   
                                     error('new project must be defined...!')
                                 }
-                                jenkinsLib.createProjectIfNotExits(input_parameters.project)
+                                jenkinsLib.createProjectIfNotExits("${JENKINS_HOST}", input_parameters.project)
                                 projectName=input_parameters.project
                             } else {
                                 projectName=input_parameters.projects

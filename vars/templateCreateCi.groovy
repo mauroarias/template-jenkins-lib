@@ -21,11 +21,14 @@ def call(body) {
                         return params.manualTrigger || (!params.gitDstRemote.equals('') && !params.projectName.equals('') && !params.serviceName.equals(''))
                     }
                 }
+                environment {
+                    JENKINS_HOST = credentials('jenkins-addr')
+                }
                 steps {
                     script { 
                         sh "echo 'manual trigger: ${params.manualTrigger}'"
                         new org.mauro.LibLoader().loadLib()
-                        jenkinsLib.downloadJenkinsCli()
+                        jenkinsLib.downloadJenkinsCli("${JENKINS_HOST}")
                     }
                 }
             }
@@ -74,20 +77,21 @@ def call(body) {
                 }
                 environment {
                     JENKINS_CRED = credentials('user-pass-credential-jenkins-credentials')
+                    JENKINS_HOST = credentials('jenkins-addr')
                 }
                 steps {
                     timeout(time: 3, unit: 'MINUTES') {
                         script { 
                             inputProjectsCi = input message: 'choose project', ok: 'Next',
                             parameters: [
-                                choice(choices: jenkinsLib.getprojects(), name: 'projectsCi', description: 'choose project'),
+                                choice(choices: jenkinsLib.getprojects("${JENKINS_HOST}"), name: 'projectsCi', description: 'choose project'),
                                 booleanParam(defaultValue: false, name: 'newProjectCi', description: 'create a new project'),
                                 string(defaultValue: '', name: 'project', trim: true, required: true, description: 'new project name')]
                             if (inputProjectsCi.newProjectCi) {
                                 if ("${inputProjectsCi.project}" == '') {   
                                     error('new project must be defined...!')
                                 }
-                                jenkinsLib.createProjectIfNotExits(inputProjectsCi.project)
+                                jenkinsLib.createProjectIfNotExits("${JENKINS_HOST}", inputProjectsCi.project)
                                 projectName = inputProjectsCi.project
                             } else {
                                 projectName = inputProjectsCi.projectsCi
@@ -130,10 +134,11 @@ def call(body) {
                     GIT_HUB_CRED = credentials('user-pass-credential-github-credentials')
                     BIT_BUCKET_CRED = credentials('user-pass-credential-bitbucket-credentials')
                     JENKINS_CRED = credentials('user-pass-credential-jenkins-credentials')
+                    JENKINS_HOST = credentials('jenkins-addr')
                 }
                 steps {
                     script { 
-                        jenkinsLib.createJenkinsMultibranchJobWithLib(gitDstRemote, serviceName, projectName, serviceName)
+                        jenkinsLib.createJenkinsMultibranchJobWithLib("${JENKINS_HOST}", gitDstRemote, serviceName, projectName, serviceName)
                     }
                 }
             }
